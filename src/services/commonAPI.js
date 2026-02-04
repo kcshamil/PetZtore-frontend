@@ -5,14 +5,21 @@ const commonAPI = async (httpMethod, url, reqBody, reqHeader) => {
     method: httpMethod,
     url,
     data: reqBody,
-    headers: reqHeader ? reqHeader : { "Content-Type": "application/json" }
+    headers: {
+      "Content-Type": "application/json",
+      ...reqHeader
+    }
   };
 
   try {
     const result = await axios(reqConfig);
     return result;
   } catch (err) {
-    return err.response || { status: 500, data: { message: "Network error" } };
+    console.error(`[API Error] ${httpMethod} ${url}:`, {
+      status: err.response?.status,
+      message: err.response?.data?.message || err.message
+    });
+    throw err;
   }
 };
 
