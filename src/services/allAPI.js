@@ -13,12 +13,12 @@ export const loginAPI = async (userDetails)=>{
    return await commonAPI("POST",`${serverURL}/login`,userDetails)
 }
 
-// âœ… Admin Login API - Admin login (users collection)
+// ✅ Admin Login API - Admin login (users collection)
 export const adminLoginAPI = async (adminCredentials) => {
    return await commonAPI("POST", `${serverURL}/admin/login`, adminCredentials)
 }
 
-// âœ… Create Admin Account API - Create admin in users collection
+// ✅ Create Admin Account API - Create admin in users collection
 export const createAdminAccountAPI = async (adminDetails) => {
    return await commonAPI("POST", `${serverURL}/admin/create`, adminDetails)
 }
@@ -49,17 +49,17 @@ export const logoutOwnerAPI = async () => {
 
 // ==================== PUBLIC APIS ====================
 
-// âœ… Get Approved Pets API - Public endpoint (no authentication required)
+// ✅ Get Approved Pets API - Public endpoint (no authentication required)
 export const getApprovedPetsAPI = async () => {
    return await commonAPI("GET", `${serverURL}/api/pets/approved-pets`, {})
 }
 
-// âœ… NEW: Submit Adoption Request API - PUBLIC (anyone can request to adopt)
+// ✅ NEW: Submit Adoption Request API - PUBLIC (anyone can request to adopt)
 export const submitAdoptionRequestAPI = async (petId, adopterData) => {
    return await commonAPI("POST", `${serverURL}/api/pets/adopt/${petId}`, adopterData)
 }
 
-// âœ… NEW: Get User's Adoption Requests by Email - PUBLIC (track adoption status)
+// ✅ NEW: Get User's Adoption Requests by Email - PUBLIC (track adoption status)
 export const getUserAdoptionRequestsAPI = async (adopterEmail) => {
    return await commonAPI("GET", `${serverURL}/api/pets/user-adoption-requests?email=${encodeURIComponent(adopterEmail)}`, {})
 }
@@ -101,19 +101,85 @@ export const deleteMyRegistrationAPI = async (token) => {
    })
 }
 
-// âœ… NEW: Get My Adoption Requests API - Owner can see adoption requests
+// ✅ NEW: Get My Adoption Requests API - Owner can see adoption requests
 export const getMyAdoptionRequestsAPI = async (token) => {
    return await commonAPI("GET", `${serverURL}/api/pets/my-adoption-requests`, {}, {
       "Authorization": `Bearer ${token}`
    })
 }
 
-// âœ… NEW: Update Adoption Request Status API - Owner can approve/reject requests
+// ✅ NEW: Update Adoption Request Status API - Owner can approve/reject requests
 export const updateAdoptionRequestStatusAPI = async (adoptionId, statusData, token) => {
    return await commonAPI("PATCH", `${serverURL}/api/pets/adoption-request/${adoptionId}`, statusData, {
       "Authorization": `Bearer ${token}`
    })
 }
+
+// ==================== PRODUCT APIS ====================
+
+// Register a new product
+export const registerProductAPI = async (productData, token) => {
+  return await commonAPI("POST", `${serverURL}/api/products`, productData, {
+    "Authorization": token ? `Bearer ${token}` : '',
+    "Content-Type": "application/json"
+  });
+};
+
+// Get all products
+export const getAllProductsAPI = async (filters = {}) => {
+  const token = sessionStorage.getItem('token');
+  const queryParams = new URLSearchParams(filters).toString();
+  return await commonAPI("GET", `${serverURL}/api/products${queryParams ? `?${queryParams}` : ""}`, {}, {
+    "Authorization": token ? `Bearer ${token}` : ''
+  });
+};
+
+// Get single product by ID
+export const getProductByIdAPI = async (productId) => {
+  const token = sessionStorage.getItem('token');
+  return await commonAPI("GET", `${serverURL}/api/products/${productId}`, {}, {
+    "Authorization": token ? `Bearer ${token}` : ''
+  });
+};
+
+// Update product
+export const updateProductAPI = async (productId, updateData, token) => {
+  return await commonAPI("PUT", `${serverURL}/api/products/${productId}`, updateData, {
+    "Authorization": token ? `Bearer ${token}` : '',
+    "Content-Type": "application/json"
+  });
+};
+
+// Delete product (soft delete)
+export const deleteProductAPI = async (productId, token) => {
+  return await commonAPI("DELETE", `${serverURL}/api/products/${productId}`, {}, {
+    "Authorization": token ? `Bearer ${token}` : ''
+  });
+};
+
+// Update product stock
+export const updateProductStockAPI = async (productId, stock, token) => {
+  return await commonAPI("PATCH", `${serverURL}/api/products/${productId}/stock`, { stock }, {
+    "Authorization": token ? `Bearer ${token}` : '',
+    "Content-Type": "application/json"
+  });
+};
+
+// Get products by category
+export const getProductsByCategoryAPI = async (category) => {
+  const token = sessionStorage.getItem('token');
+  return await commonAPI("GET", `${serverURL}/api/products/category/${category}`, {}, {
+    "Authorization": token ? `Bearer ${token}` : ''
+  });
+};
+
+// Get featured products
+export const getFeaturedProductsAPI = async () => {
+  const token = sessionStorage.getItem('token');
+  return await commonAPI("GET", `${serverURL}/api/products/featured/list`, {}, {
+    "Authorization": token ? `Bearer ${token}` : ''
+  });
+};
 
 // ==================== ADMIN PROTECTED APIS (Pet Registrations Management) ====================
 

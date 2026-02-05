@@ -4,7 +4,7 @@ import {
   Shield, LogOut, PawPrint, Clock, CheckCircle, XCircle, 
   Eye, Search, AlertCircle, TrendingUp, Users,
   Calendar, Mail, Phone, MapPin, Trash2, UserCheck,
-  Heart, Package, Image as ImageIcon, FileText
+  Heart, Package, Image as ImageIcon, FileText, Plus
 } from 'lucide-react';
 import { getAllRegistrationsAPI, updateRegistrationStatusAPI } from "../services/allAPI";
 import { toast, ToastContainer } from 'react-toastify';
@@ -192,10 +192,22 @@ function AdminDashboard() {
                   <p className="text-purple-200">Welcome, {admin?.username}!</p>
                 </div>
               </div>
-              <button onClick={handleLogout} className="px-6 py-3 bg-red-500/20 border-2 border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/30 transition-all flex items-center gap-2 font-bold">
-                <LogOut className="w-5 h-5" />
-                Logout
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => navigate('/productreg')} 
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 border-2 border-cyan-500/50 text-white rounded-xl hover:shadow-xl hover:shadow-cyan-500/30 transition-all flex items-center gap-2 font-bold"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Product
+                </button>
+                <button 
+                  onClick={handleLogout} 
+                  className="px-6 py-3 bg-red-500/20 border-2 border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/30 transition-all flex items-center gap-2 font-bold"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
 

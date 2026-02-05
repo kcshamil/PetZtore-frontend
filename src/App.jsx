@@ -13,6 +13,9 @@ import AdminDashboard from './admin/AdminDashboard'
 import PetOwnerProfile from './owner/PetOwnerProfile'
 import PetOwnerLogin from './owner/PetOwnerLogin'
 import AdoptionRequests from './Home/AdoptionRequests'
+import ProductReg from './admin/ProductReg'
+import OrderSuccess from './Home/OrderSuccess'
+
 
 
 
@@ -32,10 +35,13 @@ function App() {
       <Route path='/products' element={<Products/>}/>
       <Route path='/about' element={<About/>}/>
       <Route path='/petreg' element={<PetReg/>}/>
+      <Route path='/ordersuccess' element={<OrderSuccess/>}/>
       <Route path='/*' element={<Pnf/>}/>
 
       {/* admin */}
       <Route path='/admin/dashboard' element={<AdminDashboard/>}/>
+      <Route path='/productreg' element={<ProductReg/>}/>
+
       {/* owner */}
             <Route path='/owner/profile' element={<PetOwnerProfile/>}/>
             <Route path='/owner/login' element={<PetOwnerLogin/>}/>

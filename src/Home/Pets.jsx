@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MapPin, Calendar, Info, Plus, Search, Star, Check, X, Send, User, Mail, Phone, MessageSquare, Bell, Eye, FileText } from 'lucide-react';
+import { Heart, MapPin, Calendar, Info, Plus, Search, Star, Check, X, Send, User, Mail, Phone, MessageSquare, Bell, Eye, FileText, Lock } from 'lucide-react';
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ function Pets() {
   const [loading, setLoading] = useState(true);
   const [showAdoptModal, setShowAdoptModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
@@ -47,6 +48,12 @@ function Pets() {
       return `${months} ${months === 1 ? 'month' : 'months'}`;
     }
     return `${ageNum} ${ageNum === 1 ? 'year' : 'years'}`;
+  };
+
+  // ✅ Check if user is logged in
+  const isUserLoggedIn = () => {
+    const token = sessionStorage.getItem('token');
+    return !!token;
   };
 
   useEffect(() => {
@@ -110,8 +117,15 @@ function Pets() {
     return matchesCategory && matchesSearch;
   });
 
-  // Handle adopt button click
+  // ✅ Handle adopt button click with login check
   const handleAdoptClick = (pet) => {
+    // Check if user is logged in
+    if (!isUserLoggedIn()) {
+      setSelectedPet(pet);
+      setShowLoginPrompt(true);
+      return;
+    }
+
     setSelectedPet(pet);
     setShowAdoptModal(true);
     // Keep saved email if exists, reset other fields
@@ -168,465 +182,448 @@ function Pets() {
         setSelectedPet(null);
         setAdoptionForm({
           adopterName: '',
-          adopterEmail: adoptionForm.adopterEmail, // Keep email
+          adopterEmail: '',
           adopterPhone: '',
           adopterMessage: ''
         });
-        
-        // Refresh the pets list to update adoption status
-        fetchApprovedPets();
+      } else {
+        toast.error(response.data.message || 'Failed to submit adoption request');
       }
     } catch (error) {
-      console.error('Error submitting adoption request:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to submit adoption request. Please try again.';
-      toast.error(errorMessage);
+      console.error("Error submitting adoption:", error);
+      toast.error(error.response?.data?.message || 'Failed to submit adoption request. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Close modals
-  const closeModals = () => {
-    setShowAdoptModal(false);
-    setShowDetailsModal(false);
-    setSelectedPet(null);
-  };
-
   return (
     <>
-    <Header/>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
-          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
-        </div>
-  
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20">
         {/* Hero Section */}
-        <div className="relative pt-20 pb-16 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="inline-block mb-6">
-                <span className="px-6 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg border border-purple-500/30 rounded-full text-purple-300 text-sm font-semibold">
-                  🐾 Find Your Perfect Companion
-                </span>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-4 animate-gradient">
-                Adopt a Pet Today
-              </h1>
-              <p className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto">
-                Give a loving home to pets in need. Browse our available companions waiting for their forever family.
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <button 
-                  onClick={() => navigate('/adoption/request')}
-                  className="px-6 py-3 bg-purple-500/20 border-2 border-purple-500/30 text-purple-300 rounded-xl font-bold hover:bg-purple-500/30 transition-all flex items-center gap-2 justify-center"
-                >
-                  <Bell className="w-5 h-5" />
-                  View My Adoption Requests
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/petreg')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 justify-center"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Pet for Adoption
-                </button>
-              </div>
-            </div>
-  
-            {/* Search and Filter Bar */}
-            <div className="bg-slate-800/50 backdrop-blur-lg border-2 border-purple-500/30 rounded-2xl p-6 mb-8">
-              <div className="flex flex-col md:flex-row gap-4">
-                {/* Search Input */}
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-purple-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search by name or breed..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/50 transition-all"
-                  />
-                </div>
-  
-                {/* Category Filter */}
-                <div className="flex gap-2">
-                  {categories.map(category => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
-                        selectedCategory === category
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50'
-                          : 'bg-slate-700/50 text-purple-300 border-2 border-purple-500/30 hover:bg-slate-700'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-  
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 border-4 border-purple-500/20 border-t-purple-400 rounded-full animate-spin mb-4" />
-                <p className="text-purple-300 text-lg">Loading adorable pets...</p>
-              </div>
-            ) : (
-              <>
-                {/* Pet Cards Grid */}
-                {filteredPets.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
-                    {filteredPets.map((pet, index) => (
-                      <div
-                        key={pet.id}
-                        className="group bg-slate-800/50 backdrop-blur-lg border-2 border-purple-500/30 rounded-3xl overflow-hidden hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 transform hover:scale-105"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
-                        {/* Pet Image */}
-                        <div className="relative overflow-hidden h-64">
-                          <img
-                            src={pet.image}
-                            alt={pet.name}
-                            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className={`absolute inset-0 bg-gradient-to-t ${pet.gradient} opacity-0 group-hover:opacity-40 transition-opacity duration-500`} />
-                          
-                          {/* Quick Info Badges */}
-                          <div className="absolute top-4 left-4 flex gap-2">
-                            {pet.vaccinated && (
-                              <span className="px-3 py-1 bg-green-500/90 backdrop-blur-sm text-white text-xs font-bold rounded-full flex items-center gap-1">
-                                <Check className="w-3 h-3" /> Vaccinated
-                              </span>
-                            )}
-                            {pet.trained && (
-                              <span className="px-3 py-1 bg-blue-500/90 backdrop-blur-sm text-white text-xs font-bold rounded-full flex items-center gap-1">
-                                <Star className="w-3 h-3" /> Trained
-                              </span>
-                            )}
-                          </div>
-                        </div>
-  
-                        {/* Pet Info */}
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="text-2xl font-black text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all">
-                                {pet.name}
-                              </h3>
-                              <p className="text-purple-300 font-semibold">{pet.breed}</p>
-                            </div>
-                            <Heart className="w-6 h-6 text-pink-400 group-hover:fill-pink-400 transition-all" />
-                          </div>
-  
-                          <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 text-purple-200">
-                              <Calendar className="w-4 h-4" />
-                              <span className="text-sm">{formatAge(pet.age)}</span>
-                              <span className="text-purple-500">•</span>
-                              <span className="text-sm capitalize">{pet.gender}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-purple-200">
-                              <MapPin className="w-4 h-4" />
-                              <span className="text-sm">{pet.location}</span>
-                            </div>
-                          </div>
-  
-                          <p className="text-purple-200/80 text-sm mb-4 line-clamp-2">
-                            {pet.description}
-                          </p>
-  
-                          {/* Action Buttons */}
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => handleDetailsClick(pet)}
-                              className="flex-1 px-4 py-2 bg-slate-700/50 border-2 border-purple-500/30 text-purple-300 rounded-xl hover:bg-slate-700 transition-all font-bold flex items-center justify-center gap-2"
-                            >
-                              <Info className="w-4 h-4" />
-                              Details
-                            </button>
-                            <button
-                              onClick={() => handleAdoptClick(pet)}
-                              className={`flex-1 px-4 py-2 bg-gradient-to-r ${pet.gradient} text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}
-                            >
-                              <Heart className="w-4 h-4" />
-                              Adopt
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20">
-                    <div className="text-6xl mb-4">🐾</div>
-                    <h3 className="text-2xl font-bold text-white mb-2">No pets found</h3>
-                    <p className="text-purple-200">
-                      {searchQuery || selectedCategory !== 'All'
-                        ? 'Try adjusting your search or filter'
-                        : 'Check back soon for new pets!'}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
+        <div className="max-w-7xl mx-auto px-4 mb-12">
+          <div className="text-center mb-12">
+            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-6 animate-gradient">
+              Find Your Perfect Companion
+            </h1>
+            <p className="text-purple-200 text-xl max-w-2xl mx-auto">
+              Browse our collection of adorable pets waiting for their forever homes. Each one approved and ready for adoption! 🐾
+            </p>
           </div>
+
+          {/* Search and Filter Section */}
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-lg p-8 rounded-3xl border border-purple-500/20 shadow-2xl mb-12">
+            {/* Search Bar */}
+            <div className="relative mb-6">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-purple-400" size={24} />
+              <input
+                type="text"
+                placeholder="Search by name or breed..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-16 pr-6 py-5 bg-slate-700/50 border-2 border-purple-500/30 rounded-2xl text-white placeholder-purple-300/50 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all text-lg"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex flex-wrap gap-3">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                    selectedCategory === category
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50 scale-105'
+                      : 'bg-slate-700/50 text-purple-300 hover:bg-slate-700 border-2 border-purple-500/20'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <button
+              onClick={() => navigate('/petreg')}
+              className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl blur opacity-0 group-hover:opacity-50 transition-all"></div>
+              <Plus className="w-6 h-6 relative z-10" />
+              <span className="relative z-10">Add Pet for Adoption</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/adoption/request')}
+              className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-blue-500/50 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl blur opacity-0 group-hover:opacity-50 transition-all"></div>
+              <Eye className="w-6 h-6 relative z-10" />
+              <span className="relative z-10">View My Adoption Requests</span>
+            </button>
+          </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-20">
+              <div className="inline-block w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
+              <p className="text-purple-300 text-xl">Loading adorable pets...</p>
+            </div>
+          )}
+
+          {/* No Results */}
+          {!loading && filteredPets.length === 0 && (
+            <div className="text-center py-20">
+              <Heart className="w-20 h-20 text-purple-500/30 mx-auto mb-4" />
+              <p className="text-purple-300 text-xl">No pets found matching your criteria</p>
+              <button
+                onClick={() => {
+                  setSelectedCategory('All');
+                  setSearchQuery('');
+                }}
+                className="mt-6 px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-2xl transform hover:scale-105 transition-all"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
+          {/* Pets Grid */}
+          {!loading && filteredPets.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPets.map((pet, index) => (
+                <div
+                  key={pet.id}
+                  className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-lg rounded-3xl overflow-hidden border-2 border-purple-500/20 hover:border-purple-500/50 shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 transform hover:-translate-y-2 animate-fade-in relative"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Image */}
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={pet.image}
+                      alt={pet.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${pet.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
+                    
+                    {/* Badges */}
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {pet.vaccinated && (
+                        <span className="px-3 py-1 bg-green-500/90 backdrop-blur-sm text-white text-xs font-bold rounded-full flex items-center gap-1">
+                          <Check size={12} /> Vaccinated
+                        </span>
+                      )}
+                      {pet.trained && (
+                        <span className="px-3 py-1 bg-blue-500/90 backdrop-blur-sm text-white text-xs font-bold rounded-full flex items-center gap-1">
+                          <Star size={12} /> Trained
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Type Badge */}
+                    <div className={`absolute top-4 right-4 px-4 py-2 bg-gradient-to-r ${pet.gradient} backdrop-blur-sm rounded-full text-white font-bold text-sm shadow-lg`}>
+                      {pet.type}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-2xl font-black text-white mb-2">{pet.name}</h3>
+                    <p className="text-purple-300 mb-4">{pet.breed}</p>
+                    
+                    <div className="space-y-2 mb-6">
+                      <div className="flex items-center gap-2 text-purple-200">
+                        <Calendar size={16} className="text-purple-400" />
+                        <span className="text-sm">{formatAge(pet.age)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-purple-200">
+                        <MapPin size={16} className="text-purple-400" />
+                        <span className="text-sm">{pet.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-purple-200">
+                        <Info size={16} className="text-purple-400" />
+                        <span className="text-sm capitalize">{pet.gender}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleDetailsClick(pet)}
+                        className="flex-1 px-4 py-3 bg-slate-700/50 hover:bg-slate-700 text-purple-300 hover:text-white rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 border-2 border-purple-500/20 hover:border-purple-500/50"
+                      >
+                        <Eye size={18} />
+                        Details
+                      </button>
+                      <button
+                        onClick={() => handleAdoptClick(pet)}
+                        className={`flex-1 px-4 py-3 bg-gradient-to-r ${pet.gradient} text-white rounded-xl font-bold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2`}
+                      >
+                        <Heart size={18} />
+                        Adopt
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Decorative gradient orb */}
+                  <div className={`absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br ${pet.gradient} opacity-20 rounded-full blur-3xl group-hover:opacity-30 transition-opacity`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Adoption Request Modal */}
-        {showAdoptModal && selectedPet && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-slate-800/95 backdrop-blur-lg border-2 border-purple-500/30 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-slate-800/95 backdrop-blur-lg border-b border-purple-500/30 p-6 flex justify-between items-center">
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                  Adopt {selectedPet.name}
-                </h2>
-                <button
-                  onClick={closeModals}
-                  className="w-10 h-10 bg-slate-700/50 hover:bg-slate-700 rounded-full flex items-center justify-center transition-all"
-                >
-                  <X className="w-5 h-5 text-purple-300" />
-                </button>
-              </div>
+        {/* ✅ Login Prompt Modal */}
+        {showLoginPrompt && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-md w-full shadow-2xl border-2 border-purple-500/30 animate-scale-up overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-pink-500" />
+              
+              <button 
+                onClick={() => {
+                  setShowLoginPrompt(false);
+                  setSelectedPet(null);
+                }}
+                className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center text-purple-300 hover:text-white transition-all duration-300 z-10"
+              >
+                <X size={20} />
+              </button>
 
-              {/* Modal Body */}
-              <div className="p-6">
+              <div className="p-10 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+                  <Lock className="w-10 h-10 text-white" />
+                </div>
+                
+                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
+                  Login Required
+                </h2>
+                
+                <p className="text-purple-200 mb-8 text-lg leading-relaxed">
+                  Please log in to your account to adopt <span className="font-bold text-white">{selectedPet?.name}</span>. 
+                  Don't have an account? Register now to find your perfect companion! 🐾
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="w-full px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300"
+                  >
+                    Login Now
+                  </button>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="w-full px-8 py-4 bg-slate-700/50 hover:bg-slate-700 text-purple-300 hover:text-white rounded-xl font-bold transition-all duration-300 border-2 border-purple-500/20 hover:border-purple-500/50"
+                  >
+                    Create Account
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Adoption Modal */}
+        {showAdoptModal && selectedPet && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] shadow-2xl border-2 border-purple-500/30 animate-scale-up overflow-y-auto">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-pink-500" />
+              
+              <button 
+                onClick={() => {
+                  setShowAdoptModal(false);
+                  setSelectedPet(null);
+                }}
+                className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center text-purple-300 hover:text-white transition-all duration-300 z-10"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8">
+                <div className="text-center mb-8">
+                  <div className={`w-20 h-20 bg-gradient-to-br ${selectedPet.gradient} rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl`}>
+                    <Heart className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                    Adopt {selectedPet.name}
+                  </h2>
+                  <p className="text-purple-300">Fill in your details to submit an adoption request</p>
+                </div>
+
                 <form onSubmit={handleAdoptionSubmit} className="space-y-6">
-                  {/* Name */}
+                  {/* Name Field */}
                   <div>
-                    <label className="block text-purple-200 mb-2 font-semibold flex items-center gap-2">
-                      <User className="w-4 h-4" />
+                    <label className="flex items-center gap-2 text-purple-300 font-semibold mb-2">
+                      <User size={18} />
                       Your Name *
                     </label>
                     <input
                       type="text"
-                      required
                       value={adoptionForm.adopterName}
-                      onChange={(e) => setAdoptionForm({...adoptionForm, adopterName: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/50"
+                      onChange={(e) => setAdoptionForm({ ...adoptionForm, adopterName: e.target.value })}
                       placeholder="Enter your full name"
+                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl text-white placeholder-purple-300/50 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all"
+                      required
                     />
                   </div>
 
-                  {/* Email */}
+                  {/* Email Field */}
                   <div>
-                    <label className="block text-purple-200 mb-2 font-semibold flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
+                    <label className="flex items-center gap-2 text-purple-300 font-semibold mb-2">
+                      <Mail size={18} />
                       Email Address *
                     </label>
                     <input
                       type="email"
-                      required
                       value={adoptionForm.adopterEmail}
-                      onChange={(e) => setAdoptionForm({...adoptionForm, adopterEmail: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/50"
+                      onChange={(e) => setAdoptionForm({ ...adoptionForm, adopterEmail: e.target.value })}
                       placeholder="your.email@example.com"
+                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl text-white placeholder-purple-300/50 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all"
+                      required
                     />
                   </div>
 
-                  {/* Phone */}
+                  {/* Phone Field */}
                   <div>
-                    <label className="block text-purple-200 mb-2 font-semibold flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
+                    <label className="flex items-center gap-2 text-purple-300 font-semibold mb-2">
+                      <Phone size={18} />
                       Phone Number *
                     </label>
                     <input
                       type="tel"
-                      required
                       value={adoptionForm.adopterPhone}
-                      onChange={(e) => setAdoptionForm({...adoptionForm, adopterPhone: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/50"
-                      placeholder="Your contact number"
+                      onChange={(e) => setAdoptionForm({ ...adoptionForm, adopterPhone: e.target.value })}
+                      placeholder="1234567890"
+                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl text-white placeholder-purple-300/50 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all"
+                      required
                     />
                   </div>
 
-                  {/* Message */}
+                  {/* Message Field */}
                   <div>
-                    <label className="block text-purple-200 mb-2 font-semibold flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" />
-                      Message to Owner (Optional)
+                    <label className="flex items-center gap-2 text-purple-300 font-semibold mb-2">
+                      <MessageSquare size={18} />
+                      Message (Optional)
                     </label>
                     <textarea
                       value={adoptionForm.adopterMessage}
-                      onChange={(e) => setAdoptionForm({...adoptionForm, adopterMessage: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/50 resize-none"
+                      onChange={(e) => setAdoptionForm({ ...adoptionForm, adopterMessage: e.target.value })}
                       placeholder="Tell the owner why you'd like to adopt this pet..."
-                      rows="4"
+                      rows={4}
+                      className="w-full px-4 py-3 bg-slate-700/50 border-2 border-purple-500/30 rounded-xl text-white placeholder-purple-300/50 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all resize-none"
                     />
                   </div>
 
                   {/* Info Box */}
-                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
-                    <p className="text-purple-200 text-sm">
-                      <strong>Note:</strong> Your request will be sent to the pet owner. They will review your request and contact you if approved. You can track your request status by clicking "View My Adoption Requests" on the main page.
-                    </p>
+                  <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2 border-purple-500/30 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <Bell className="w-5 h-5 text-purple-400 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="text-purple-200 text-sm leading-relaxed">
+                          Your request will be sent to the pet owner. They will review your information and contact you directly if approved. Make sure your contact details are correct!
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Submit Buttons */}
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={closeModals}
-                      className="flex-1 px-6 py-3 bg-slate-700/50 border-2 border-purple-500/30 text-purple-300 rounded-xl font-bold hover:bg-slate-700 transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className={`flex-1 px-6 py-3 bg-gradient-to-r ${selectedPet.gradient} text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-                    >
-                      {submitting ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-5 h-5" />
-                          Submit Request
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className={`w-full px-8 py-4 bg-gradient-to-r ${selectedPet.gradient} text-white rounded-xl font-bold hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={20} />
+                        Submit Adoption Request
+                      </>
+                    )}
+                  </button>
                 </form>
               </div>
             </div>
           </div>
         )}
 
-        {/* Pet Details Modal */}
+        {/* Pet Details Modal - keeping it as it was but with updated adopt button */}
         {showDetailsModal && selectedPet && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-slate-800/95 backdrop-blur-lg border-2 border-purple-500/30 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-slate-800/95 backdrop-blur-lg border-b border-purple-500/30 p-6 flex justify-between items-center">
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                  Pet Details
-                </h2>
-                <button
-                  onClick={closeModals}
-                  className="w-10 h-10 bg-slate-700/50 hover:bg-slate-700 rounded-full flex items-center justify-center transition-all"
-                >
-                  <X className="w-5 h-5 text-purple-300" />
-                </button>
-              </div>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto">
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-4xl w-full my-8 shadow-2xl border-2 border-purple-500/30 animate-scale-up">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-pink-500" />
+              
+              <button 
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedPet(null);
+                }}
+                className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center text-purple-300 hover:text-white transition-all duration-300 z-10"
+              >
+                <X size={20} />
+              </button>
 
-              {/* Modal Body */}
-              <div className="p-6">
-                {/* Pet Name & Type Header */}
-                <div className="mb-6 text-center">
-                  <h3 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 mb-2">
-                    {selectedPet.name}
-                  </h3>
-                  <p className="text-purple-300 text-xl font-semibold">{selectedPet.breed} • {selectedPet.type}</p>
-                </div>
+              <div className="p-8 max-h-[85vh] overflow-y-auto scrollbar-hide">
+                <div className="space-y-8">
+                  {/* Header with Image */}
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="relative rounded-2xl overflow-hidden h-80 md:h-auto">
+                      <img
+                        src={selectedPet.image}
+                        alt={selectedPet.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${selectedPet.gradient} opacity-20`} />
+                    </div>
 
-                {/* Image Gallery */}
-                <div className="mb-6">
-                  <h4 className="text-lg font-bold text-purple-300 mb-3 flex items-center gap-2">
-                    <Eye className="w-5 h-5" />
-                    Pet Photos {selectedPet.allPhotos.length > 0 && `(${selectedPet.allPhotos.length})`}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedPet.allPhotos.length > 0 ? (
-                      selectedPet.allPhotos.map((photo, index) => (
-                        <div key={index} className="relative group overflow-hidden rounded-2xl">
-                          <img
-                            src={photo}
-                            alt={`${selectedPet.name} - Photo ${index + 1}`}
-                            className="w-full h-64 object-cover border-2 border-purple-500/30 group-hover:border-purple-400 transition-all group-hover:scale-105 duration-300"
-                          />
-                          <div className="absolute bottom-3 right-3 px-3 py-1 bg-slate-900/90 backdrop-blur-sm rounded-lg text-purple-200 text-xs font-bold border border-purple-500/30">
-                            Photo {index + 1} of {selectedPet.allPhotos.length}
-                          </div>
+                    <div className="flex flex-col justify-center">
+                      <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
+                        {selectedPet.name}
+                      </h2>
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-3 text-purple-200 text-lg">
+                          <span className={`px-4 py-2 bg-gradient-to-r ${selectedPet.gradient} rounded-full text-white font-bold text-sm`}>
+                            {selectedPet.type}
+                          </span>
+                          <span className="text-white font-semibold">{selectedPet.breed}</span>
                         </div>
-                      ))
-                    ) : (
-                      <div className="col-span-2">
-                        <img
-                          src={selectedPet.image}
-                          alt={selectedPet.name}
-                          className="w-full h-96 object-cover rounded-2xl border-2 border-purple-500/30"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Complete Pet Registration Information */}
-                <div className="space-y-6">
-                  
-                  {/* Basic Information Section */}
-                  <div>
-                    <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-4 flex items-center gap-2">
-                      <Info className="w-5 h-5 text-cyan-400" />
-                      Basic Information
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border-2 border-purple-500/20 hover:border-purple-400 transition-all">
-                        <p className="text-purple-300 text-sm mb-1 font-semibold flex items-center gap-2">
-                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                          Pet Type
-                        </p>
-                        <p className="text-white font-bold text-xl">{selectedPet.type}</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border-2 border-purple-500/20 hover:border-purple-400 transition-all">
-                        <p className="text-purple-300 text-sm mb-1 font-semibold flex items-center gap-2">
-                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                          Breed
-                        </p>
-                        <p className="text-white font-bold text-xl">{selectedPet.breed}</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border-2 border-purple-500/20 hover:border-purple-400 transition-all">
-                        <p className="text-purple-300 text-sm mb-1 font-semibold flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          Age
-                        </p>
-                        <p className="text-white font-bold text-xl">{formatAge(selectedPet.age)}</p>
-                      </div>
-                      <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border-2 border-purple-500/20 hover:border-purple-400 transition-all">
-                        <p className="text-purple-300 text-sm mb-1 font-semibold flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          Gender
-                        </p>
-                        <p className="text-white font-bold text-xl capitalize">{selectedPet.gender}</p>
-                      </div>
-                      <div className="md:col-span-2 bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-4 border-2 border-purple-500/20 hover:border-purple-400 transition-all">
-                        <p className="text-purple-300 text-sm mb-1 font-semibold flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          Location
-                        </p>
-                        <p className="text-white font-bold text-xl">{selectedPet.location}</p>
+                        <div className="flex items-center gap-2 text-purple-200">
+                          <Calendar size={20} className="text-purple-400" />
+                          <span className="font-semibold">{formatAge(selectedPet.age)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-purple-200">
+                          <MapPin size={20} className="text-purple-400" />
+                          <span className="font-semibold">{selectedPet.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-purple-200">
+                          <Info size={20} className="text-purple-400" />
+                          <span className="font-semibold capitalize">{selectedPet.gender}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Description Section */}
+                  {/* Description */}
                   <div>
-                    <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-4 flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-green-400" />
+                    <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
                       About {selectedPet.name}
                     </h4>
-                    <div className="bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-5 border-2 border-purple-500/20">
-                      <p className="text-white leading-relaxed text-lg">{selectedPet.description}</p>
-                    </div>
+                    <p className="text-purple-200 leading-relaxed bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-xl p-6 border-2 border-purple-500/20">
+                      {selectedPet.description || 'No description provided.'}
+                    </p>
                   </div>
 
-                  {/* Health & Training Status */}
+                  {/* Health & Training Info */}
                   <div>
-                    <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400 mb-4">
+                    <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400 mb-4 flex items-center gap-2">
+                      <Check className="w-5 h-5 text-green-400" />
                       Health & Training Status
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
                       {/* Vaccination Status */}
                       {selectedPet.vaccinated ? (
                         <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-500/50 rounded-xl p-5 flex items-start gap-4 hover:shadow-lg hover:shadow-green-500/20 transition-all">
@@ -635,19 +632,19 @@ function Pets() {
                           </div>
                           <div>
                             <p className="text-green-300 font-bold text-lg mb-1">✅ Vaccinated</p>
-                            <p className="text-green-200/80 text-sm">All vaccinations are up to date</p>
-                            <p className="text-green-300/60 text-xs mt-1">Ready for adoption</p>
+                            <p className="text-green-200/80 text-sm">Up-to-date on all vaccinations</p>
+                            <p className="text-green-300/60 text-xs mt-1">Health records available</p>
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-gradient-to-br from-orange-500/20 to-amber-500/20 border-2 border-orange-500/50 rounded-xl p-5 flex items-start gap-4">
-                          <div className="w-14 h-14 bg-orange-500/30 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-orange-400/50">
-                            <X className="w-7 h-7 text-orange-300" />
+                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-xl p-5 flex items-start gap-4">
+                          <div className="w-14 h-14 bg-yellow-500/30 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-yellow-400/50">
+                            <X className="w-7 h-7 text-yellow-300" />
                           </div>
                           <div>
-                            <p className="text-orange-300 font-bold text-lg mb-1">Not Vaccinated</p>
-                            <p className="text-orange-200/80 text-sm">May require vaccinations</p>
-                            <p className="text-orange-300/60 text-xs mt-1">Consult with owner</p>
+                            <p className="text-yellow-300 font-bold text-lg mb-1">Not Vaccinated</p>
+                            <p className="text-yellow-200/80 text-sm">May need vaccinations</p>
+                            <p className="text-yellow-300/60 text-xs mt-1">Discuss with owner</p>
                           </div>
                         </div>
                       )}
@@ -790,6 +787,10 @@ function Pets() {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
           }
+          @keyframes scale-up {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+          }
           @keyframes gradient {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -797,6 +798,9 @@ function Pets() {
           .animate-fade-in { 
             animation: fade-in 0.6s ease-out forwards; 
             opacity: 0; 
+          }
+          .animate-scale-up {
+            animation: scale-up 0.4s ease-out;
           }
           .animate-gradient { 
             background-size: 200% 200%; 
@@ -806,6 +810,8 @@ function Pets() {
             to { transform: rotate(360deg); }
           }
           .animate-spin { animation: spin 1s linear infinite; }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
       </div>
       <Footer/>
