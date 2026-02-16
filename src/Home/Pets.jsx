@@ -375,7 +375,7 @@ function Pets() {
           )}
         </div>
 
-        {/* ✅ Login Prompt Modal */}
+        {/*  Login Prompt Modal */}
         {showLoginPrompt && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-md w-full shadow-2xl border-2 border-purple-500/30 animate-scale-up overflow-hidden">

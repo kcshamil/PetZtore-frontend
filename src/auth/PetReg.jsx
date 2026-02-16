@@ -580,7 +580,7 @@ function PetReg() {
                   />
                 </label>
                 <p className="text-sm text-purple-300 mt-2">
-                  JPG, PNG, or WEBP • Max 5MB each • Up to 5 images
+                  JPG, PNG, or WEBP 
                 </p>
               </div>
 
@@ -632,7 +632,7 @@ function PetReg() {
                     />
                   </label>
                   <p className="text-sm text-purple-300 mt-2">
-                    JPG, PNG, WEBP, or PDF • Max 10MB
+                    JPG, PNG, WEBP, or PDF 
                   </p>
                   {errors.license && <p className="text-red-400 text-sm mt-1">{errors.license}</p>}
                 </div>

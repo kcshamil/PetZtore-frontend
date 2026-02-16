@@ -13,12 +13,18 @@ export const loginAPI = async (userDetails)=>{
    return await commonAPI("POST",`${serverURL}/login`,userDetails)
 }
 
-// ✅ Admin Login API - Admin login (users collection)
+// /google/sign-in API - Regular user login when user click google login btn
+export const googleLoginAPI = async (userDetails)=>{
+   return await commonAPI("POST",`${serverURL}/google/sign-in`,userDetails)
+}
+
+
+// Admin Login API - Admin login (users collection)
 export const adminLoginAPI = async (adminCredentials) => {
    return await commonAPI("POST", `${serverURL}/admin/login`, adminCredentials)
 }
 
-// ✅ Create Admin Account API - Create admin in users collection
+// Create Admin Account API - Create admin in users collection
 export const createAdminAccountAPI = async (adminDetails) => {
    return await commonAPI("POST", `${serverURL}/admin/create`, adminDetails)
 }

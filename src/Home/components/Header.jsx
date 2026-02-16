@@ -264,7 +264,7 @@ function Header() {
                   <button 
                     onClick={() => {
                       setShowLoginModal(false);
-                      navigate('/pet-registration');
+                      navigate('/register');
                     }}
                     className="text-pink-400 hover:text-pink-300 font-semibold hover:underline"
                   >

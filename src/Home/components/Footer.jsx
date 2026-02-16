@@ -3,7 +3,7 @@ import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn, FaPaw, FaHeart, FaEn
 
 function Footer() {
   return (
-    <footer className="relative bg-slate-900 text-gray-300 mt-20 overflow-hidden">
+    <footer className="relative bg-slate-900 text-gray-300  overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 left-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />

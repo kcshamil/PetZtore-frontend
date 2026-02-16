@@ -37,7 +37,6 @@ function PetOwnerLogin() {
       
       if (result.status === 200) {
         toast.success('Login successful!');
-        // Store token in sessionStorage
         sessionStorage.setItem('petOwnerToken', result.data.token);
         sessionStorage.setItem('petOwner', JSON.stringify(result.data.registration));
         
@@ -94,7 +93,7 @@ function PetOwnerLogin() {
           {/* Info Box */}
           <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
             <p className="text-blue-200 text-sm">
-              <strong>Note:</strong> This login is specifically for pet owners who have registered their pets for adoption. If you're a regular user, please use the <button onClick={() => navigate('/login')} className="text-blue-400 hover:underline">main login page</button>.
+              <strong>Note:</strong> This login is specifically for pet owners who have registered their pets for adoption. If you're a regular user, please use the <button onClick={() => navigate('/login')} className="text-blue-400 hover:underline">users    login page</button>.
             </p>
           </div>
 
@@ -152,7 +151,7 @@ function PetOwnerLogin() {
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    Login to Dashboard
+                    Login 
                   </>
                 )}
               </span>
@@ -165,7 +164,7 @@ function PetOwnerLogin() {
             <p className="text-purple-200 text-sm">
               Don't have a pet registered yet?{' '}
               <button 
-                onClick={() => navigate('/pet-registration')}
+                onClick={() => navigate('/login')}
                 className="text-transparent bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text font-semibold hover:underline"
               >
                 Register Your Pet

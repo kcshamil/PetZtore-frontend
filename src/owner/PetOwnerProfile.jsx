@@ -393,7 +393,7 @@ function PetOwnerProfile() {
               <div className="flex items-start gap-4">
                 <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="text-xl font-bold text-green-400 mb-2">Registration Approved! 🎉</h3>
+                  <h3 className="text-xl font-bold text-green-400 mb-2">Registration Approved!!</h3>
                   <p className="text-green-200">
                     Your pet is now visible on the adoption page. People can view and submit adoption requests!
                   </p>
@@ -482,7 +482,7 @@ function PetOwnerProfile() {
                         className="px-6 py-3 bg-purple-500/20 border-2 border-purple-500/30 text-purple-400 rounded-xl hover:bg-purple-500/30 transition-all flex items-center gap-2 font-semibold"
                       >
                         <Edit3 className="w-4 h-4" />
-                        Edit Pet Info
+                        Edit 
                       </button>
                     ) : (
                       <div className="flex gap-3">

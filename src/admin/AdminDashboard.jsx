@@ -399,7 +399,7 @@ function AdminDashboard() {
                           <div className="flex gap-3">
                             <button onClick={() => { setSelectedRegistration(reg); setShowDetailsModal(true); }} className="flex-1 px-4 py-2 bg-blue-500/20 border-2 border-blue-500/30 text-blue-400 rounded-xl hover:bg-blue-500/30 transition-all flex items-center justify-center gap-2 font-bold">
                               <Eye className="w-4 h-4" />
-                              View Full Details
+                              View Details
                             </button>
                             {reg.status === 'pending' && (
                               <>
